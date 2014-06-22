@@ -182,7 +182,7 @@ class Pods_Jobs_Queue_API {
 		$defaults = array(
 			'callback' => '',
 			'arguments' => '',
-			'blog_id' => 0,
+			'blog_id' => (int) ( function_exists( 'get_current_blog_id' ) ? get_current_blog_id() : 0 ),
 			'group' => '',
 			'status' => 'queued'
 		);
@@ -345,6 +345,40 @@ class Pods_Jobs_Queue_API {
 		}
 
 		return $updated;
+
+	}
+
+	/**
+	 * @param $job_id
+	 *
+	 * @return bool If job was deleted successfully
+	 */
+	public static function delete_job( $job_id ) {
+
+		if ( ! Pods_Jobs_Queue::is_compatible() ) {
+			return false;
+		}
+
+		/**
+		 * @var $wpdb wpdb
+		 */
+		global $wpdb;
+
+		$table = self::table();
+
+		$deleted = $wpdb->delete(
+			 $table,
+			 array( 'id' => $job_id ),
+			 array( '%d' )
+		);
+
+		$deleted = ! empty( $deleted );
+
+		if ( $deleted ) {
+			do_action( 'pods_jobs_queue_job_deleted', $job_id );
+		}
+
+		return $deleted;
 
 	}
 

@@ -3,13 +3,13 @@
 Plugin Name: Pods Jobs Queue
 Plugin URI: http://pods.io/
 Description: Queue callbacks to be ran with arguments, unlike wp_cron which is scheduled jobs, these are queued and run concurrently as needed
-Version: 0.1.3
+Version: 0.1.6
 Author: The Pods Framework Team
 Author URI: http://pods.io/
 */
 
 // Pods Jobs Queue version
-define( 'PODS_JOBS_QUEUE_VERSION', '0.1.4' );
+define( 'PODS_JOBS_QUEUE_VERSION', '0.1.6' );
 
 // Include class
 include_once 'Pods_Jobs_Queue.php';

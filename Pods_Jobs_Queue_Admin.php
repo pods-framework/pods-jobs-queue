@@ -9,11 +9,11 @@ class Pods_Jobs_Queue_Admin {
 	 */
 	public static function init() {
 
+		// Admin UI
+		add_filter( 'pods_admin_components_menu', array( __CLASS__, 'admin_menu' ) );
+
 		// Register assets
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_assets' ) );
-
-		// Admin UI
-		add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ) );
 
 		// Admin AJAX callback for Processing Job
 		add_action( 'wp_ajax_pods_jobs_queue_process_job', array( __CLASS__, 'admin_ajax_process_job' ) );
@@ -21,6 +21,28 @@ class Pods_Jobs_Queue_Admin {
 		// Admin AJAX callback for Processing Queue
 		add_action( 'wp_ajax_pods_jobs_queue_process_queue', array( __CLASS__, 'admin_ajax_process_queue' ) );
 		add_action( 'wp_ajax_nopriv_pods_jobs_queue_process_queue', array( __CLASS__, 'admin_ajax_process_queue' ) );
+
+	}
+
+	/**
+	 * Add options page to menu
+	 *
+	 * @param array $admin_menus The submenu items in Pods Admin menu.
+	 *
+	 * @return mixed
+	 *
+	 * @since 0.0.1
+	 */
+	public static function admin_menu( $admin_menus ) {
+
+		$admin_menus[ 'Jobs Queue' ] = array(
+			'menu_page' => 'pods-jobs-queue',
+			'page_title' => __( 'Pods Jobs Queue', 'pods-jobs-queue' ),
+			'capability' => 'manage_options',
+			'callback' => array( __CLASS__, 'admin_page' )
+		);
+
+		return $admin_menus;
 
 	}
 
@@ -42,17 +64,6 @@ class Pods_Jobs_Queue_Admin {
 
 		// Setup variable for output when JS enqueued
 		wp_localize_script( 'pods-jobs-queue', 'pods_jobs_queue_config', $config );
-
-	}
-
-	/**
-	 * Add options page to menu
-	 */
-	public static function admin_menu() {
-
-		if ( Pods_Jobs_Queue::is_compatible() && pods_is_admin( 'pods', 'pods_jobs_queue' ) ) {
-			add_options_page( __( 'Pods Jobs Queue', 'pods-jobs-queue' ), __( 'Pods Jobs Queue', 'pods-jobs-queue' ), 'read', 'pods-jobs-queue', array( __CLASS__, 'admin_page' ) );
-		}
 
 	}
 
@@ -86,20 +97,14 @@ class Pods_Jobs_Queue_Admin {
 			'orderby' => '( `t`.`status` = "queued" ) DESC, ( `t`.`status` = "completed" ) DESC, `t`.`date_queued` DESC, `t`.`date_completed` DESC',
 			'fields' => array(
 				'manage' => array(
-					/*
-				`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-				`callback` VARCHAR(255) NOT NULL,
-				`arguments` LONGTEXT NOT NULL,
-				`blog_id` BIGINT(20) NOT NULL,
-				`memo` VARCHAR(255) NOT NULL,
-				`group` VARCHAR(255) NOT NULL,
-				`status` VARCHAR(10) NOT NULL,
-				`date_queued` DATETIME NOT NULL,
-				`date_started` DATETIME NOT NULL,
-				`date_completed` DATETIME NOT NULL,*/
 					'callback' =>  array(
 						'name' => 'callback',
 						'label' => 'Callback',
+						'type' => 'text'
+					),
+					'group' =>  array(
+						'name' => 'group',
+						'label' => 'Group',
 						'type' => 'text'
 					),
 					'memo' =>  array(
@@ -107,39 +112,41 @@ class Pods_Jobs_Queue_Admin {
 						'label' => 'Memo',
 						'type' => 'text'
 					),
-					'blog_id' => array(
-						'name' => 'blog_id',
-						'label' => 'Blog ID',
-						'type' => 'number',
-						'options' => array(
-							'number_format_type' => '9999.99',
-							'number_decimals' => 0
-						),
-						'width' => '5%'
-					),
 					'status' => array(
-						'name' => 'avg_time',
-						'label' => 'Average Load Time (seconds)',
-						'type' => 'number',
-						'options' => array(
-							'number_decimals' => 3
-						),
-						'width' => '12%'
+						'name' => 'status',
+						'label' => 'Status',
+						'type' => 'pick',
+						'pick_object' => 'custom-simple',
+						'data' => array(
+							'queued' => __( 'Queued', 'pods-jobs-queue' ),
+							'processing' => __( 'Processing', 'pods-jobs-queue' ),
+							'completed' => __( 'Completed', 'pods-jobs-queue' ),
+							'failed' => __( 'Failed', 'pods-jobs-queue' )
+						)
 					),
 					'date_queued' => array(
-						'name' => 'total_calls',
-						'label' => 'Total Calls',
-						'type' => 'datetime'
+						'name' => 'date_queued',
+						'label' => 'Time Queued',
+						'type' => 'datetime',
+						'options' => array(
+							'datetime_allow_empty' => 1
+						)
 					),
 					'date_started' => array(
-						'name' => 'total_calls',
-						'label' => 'Total Calls',
-						'type' => 'datetime'
+						'name' => 'date_started',
+						'label' => 'Time Started',
+						'type' => 'datetime',
+						'options' => array(
+							'datetime_allow_empty' => 1
+						)
 					),
 					'date_completed' => array(
-						'name' => 'last_generated',
-						'label' => 'Last Generated',
-						'type' => 'datetime'
+						'name' => 'date_completed',
+						'label' => 'Time Completed',
+						'type' => 'datetime',
+						'options' => array(
+							'datetime_allow_empty' => 1
+						)
 					)
 				),
 				'search' => array()
@@ -147,6 +154,7 @@ class Pods_Jobs_Queue_Admin {
 			'filters' => array(
 				'callback',
 				'memo',
+				'group',
 				'status',
 				'date_queued',
 				'date_started',
@@ -183,6 +191,7 @@ class Pods_Jobs_Queue_Admin {
 
 		$ui[ 'fields' ][ 'search' ][ 'callback' ] = $ui[ 'fields' ][ 'manage' ][ 'callback' ];
 		$ui[ 'fields' ][ 'search' ][ 'memo' ] = $ui[ 'fields' ][ 'manage' ][ 'memo' ];
+		$ui[ 'fields' ][ 'search' ][ 'group' ] = $ui[ 'fields' ][ 'manage' ][ 'group' ];
 		$ui[ 'fields' ][ 'search' ][ 'status' ] = $ui[ 'fields' ][ 'manage' ][ 'status' ];
 		$ui[ 'fields' ][ 'search' ][ 'date_queued' ] = $ui[ 'fields' ][ 'manage' ][ 'date_queued' ];
 		$ui[ 'fields' ][ 'search' ][ 'date_started' ] = $ui[ 'fields' ][ 'manage' ][ 'date_started' ];
@@ -198,23 +207,42 @@ class Pods_Jobs_Queue_Admin {
 			'type' => 'paragraph'
 		);
 
-		$ui[ 'fields' ][ 'view' ][ 'group' ] = array(
-			'name' => 'group',
-			'label' => 'Callback Group',
-			'type' => 'text'
-		);
-
 		$ui[ 'fields' ][ 'view' ][ 'log' ] = array(
 			'name' => 'log',
 			'label' => 'Callback Log',
 			'type' => 'text'
 		);
 
+		$ui[ 'fields' ][ 'view' ][ 'blog_id' ] = array(
+			'name' => 'blog_id',
+			'label' => 'Blog ID',
+			'type' => 'number',
+			'options' => array(
+				'number_format_type' => '9999.99',
+				'number_decimals' => 0
+			),
+			'width' => '5%'
+		);
+
+		if ( ! defined( 'PODS_JOBS_QUEUE_GROUPS' ) || ! PODS_JOBS_QUEUE_GROUPS ) {
+			unset( $ui[ 'fields' ][ 'manage' ][ 'group' ] );
+			unset( $ui[ 'fields' ][ 'manage' ][ 'search' ] );
+			unset( $ui[ 'fields' ][ 'manage' ][ 'view' ] );
+
+			unset( $ui[ 'filters' ][ array_search( 'group', $ui[ 'filters' ] ) ] );
+		}
+
 		if ( 1 == pods_v( 'deleted_bulk' ) ) {
 			unset( $ui[ 'actions_custom' ][ 'delete' ] );
 		}
 
 		pods_ui( $ui );
+
+	}
+
+	public static function admin_page_ui_status_date( ) {
+
+
 
 	}
 
