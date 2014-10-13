@@ -38,19 +38,19 @@ class Pods_Jobs_Queue_API {
 		$tables = array();
 
 		$tables[] = "
-			CREATE TABLE `{$table}` (
-				`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-				`callback` VARCHAR(255) NOT NULL,
-				`arguments` LONGTEXT NOT NULL,
-				`blog_id` BIGINT(20) NOT NULL,
-				`memo` VARCHAR(255) NOT NULL,
-				`group` VARCHAR(255) NOT NULL,
-				`status` VARCHAR(10) NOT NULL,
-				`date_queued` DATETIME NOT NULL,
-				`date_started` DATETIME NOT NULL,
-				`date_completed` DATETIME NOT NULL,
-				`log` LONGTEXT NOT NULL,
-				PRIMARY KEY (`id`)
+			CREATE TABLE {$table} (
+				id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+				callback VARCHAR(255) NOT NULL,
+				arguments LONGTEXT NOT NULL,
+				blog_id BIGINT(20) NOT NULL,
+				memo VARCHAR(255) NOT NULL,
+				job_group VARCHAR(255) NOT NULL,
+				status VARCHAR(10) NOT NULL,
+				date_queued DATETIME NOT NULL,
+				date_started DATETIME NOT NULL,
+				date_completed DATETIME NOT NULL,
+				log LONGTEXT NOT NULL,
+				UNIQUE KEY (id)
 			)
 		";
 
@@ -77,7 +77,7 @@ class Pods_Jobs_Queue_API {
 		$table = self::table();
 
 		// Delete table if it exists
-		$wpdb->query( "DROP TABLE IF EXISTS `{$table}`" );
+		$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
 
 	}
 
@@ -102,9 +102,9 @@ class Pods_Jobs_Queue_API {
 		$table = self::table();
 
 		$sql = "
-			SELECT * FROM `{$table}`
-			WHERE `status` = %s
-			ORDER BY `date_queued`, `id`
+			SELECT * FROM {$table}
+			WHERE status = %s
+			ORDER BY date_queued, id
 			LIMIT 1
 		";
 
@@ -142,8 +142,8 @@ class Pods_Jobs_Queue_API {
 		$table = self::table();
 
 		$sql = "
-			SELECT * FROM `{$table}`
-			WHERE `id` = %d
+			SELECT * FROM {$table}
+			WHERE id = %d
 		";
 
 		$item = $wpdb->get_row( $wpdb->prepare( $sql, $job_id ), ARRAY_A );

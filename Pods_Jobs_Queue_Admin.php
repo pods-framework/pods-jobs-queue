@@ -102,7 +102,7 @@ class Pods_Jobs_Queue_Admin {
 						'label' => 'Callback',
 						'type' => 'text'
 					),
-					'group' =>  array(
+					'job_group' =>  array(
 						'name' => 'group',
 						'label' => 'Group',
 						'type' => 'text'
@@ -154,7 +154,7 @@ class Pods_Jobs_Queue_Admin {
 			'filters' => array(
 				'callback',
 				'memo',
-				'group',
+				'job_group',
 				'status',
 				'date_queued',
 				'date_started',
@@ -191,7 +191,7 @@ class Pods_Jobs_Queue_Admin {
 
 		$ui[ 'fields' ][ 'search' ][ 'callback' ] = $ui[ 'fields' ][ 'manage' ][ 'callback' ];
 		$ui[ 'fields' ][ 'search' ][ 'memo' ] = $ui[ 'fields' ][ 'manage' ][ 'memo' ];
-		$ui[ 'fields' ][ 'search' ][ 'group' ] = $ui[ 'fields' ][ 'manage' ][ 'group' ];
+		$ui[ 'fields' ][ 'search' ][ 'job_group' ] = $ui[ 'fields' ][ 'manage' ][ 'job_group' ];
 		$ui[ 'fields' ][ 'search' ][ 'status' ] = $ui[ 'fields' ][ 'manage' ][ 'status' ];
 		$ui[ 'fields' ][ 'search' ][ 'date_queued' ] = $ui[ 'fields' ][ 'manage' ][ 'date_queued' ];
 		$ui[ 'fields' ][ 'search' ][ 'date_started' ] = $ui[ 'fields' ][ 'manage' ][ 'date_started' ];
@@ -225,11 +225,11 @@ class Pods_Jobs_Queue_Admin {
 		);
 
 		if ( ! defined( 'PODS_JOBS_QUEUE_GROUPS' ) || ! PODS_JOBS_QUEUE_GROUPS ) {
-			unset( $ui[ 'fields' ][ 'manage' ][ 'group' ] );
+			unset( $ui[ 'fields' ][ 'manage' ][ 'job_group' ] );
 			unset( $ui[ 'fields' ][ 'manage' ][ 'search' ] );
 			unset( $ui[ 'fields' ][ 'manage' ][ 'view' ] );
 
-			unset( $ui[ 'filters' ][ array_search( 'group', $ui[ 'filters' ] ) ] );
+			unset( $ui[ 'filters' ][ array_search( 'job_group', $ui[ 'filters' ] ) ] );
 		}
 
 		if ( 1 == pods_v( 'deleted_bulk' ) ) {
