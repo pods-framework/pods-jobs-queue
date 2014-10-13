@@ -49,7 +49,7 @@ class Pods_Jobs_Queue_Admin {
 	/**
 	 * Register assets for Pods Jobs Queue
 	 */
-	public function register_assets() {
+	public static function register_assets() {
 
 		// Register JS script for Pods Jobs Queue processing
 		wp_register_script( 'pods-jobs-queue', plugins_url( 'js/pods-jobs-queue.js', __FILE__ ), array( 'jquery' ), PODS_JOBS_QUEUE_VERSION, true );
