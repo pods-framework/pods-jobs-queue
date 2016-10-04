@@ -160,6 +160,47 @@ class Pods_Jobs_Queue_API {
 	}
 
 	/**
+	 * Get the next jobs from the queue
+	 *
+	 * @param int $limit Number of jobs to limit batch to
+	 * @param string $status Status to get job from
+	 *
+	 * @return array Job IDs that are in the queue
+	 */
+	public static function get_queue( $limit = 100, $status = 'queued' ) {
+
+		if ( ! Pods_Jobs_Queue::is_compatible() ) {
+			return null;
+		}
+
+		/**
+		 * @var $wpdb wpdb
+		 */
+		global $wpdb;
+
+		$table = self::table();
+
+		$limit = (int) $limit;
+
+		$sql = "
+			SELECT `id` FROM `{$table}`
+			WHERE `status` = %s
+			ORDER BY `date_queued`, `id`
+		";
+
+		if ( 0 < $limit ) {
+			$sql .= " LIMIT {$limit}";
+		}
+
+		$ids = $wpdb->get_col( $wpdb->prepare( $sql, $status ) );
+
+		$ids = array_map( 'absint', $ids );
+
+		return $ids;
+
+	}
+
+	/**
 	 * Queue job to be ran and merge with default job info
 	 *
 	 * @param array $data
@@ -410,9 +451,11 @@ class Pods_Jobs_Queue_API {
 						$return = $output;
 					}
 
+					echo $return;
+
 					self::complete_job( $job->id, $return );
 
-					return true;
+					return $job->id;
 				}
 				catch ( Exception $e ) {
 					self::stop_job( $job->id, $e->getMessage() );
@@ -432,12 +475,23 @@ class Pods_Jobs_Queue_API {
 		$count = 0;
 
 		$max_jobs = apply_filters( 'pods_jobs_queue_max_process', 25 );
+		$max_time = apply_filters( 'pods_jobs_queue_max_time', 25 );
 
-		while ( $count < $max_jobs && $job = self::get_next_job() ) {
+		$start = time();
+
+		$queue = array();
+
+		while ( $count < $max_jobs && ( $job = self::get_next_job() ) && ( time() - $start ) < $max_time ) {
 			$count++;
 
-			self::run_job( $job );
+			$job_id = self::run_job( $job );
+
+			if ( $job_id ) {
+				$queue[] = $job_id;
+			}
 		}
+
+		return $queue;
 
 	}
 

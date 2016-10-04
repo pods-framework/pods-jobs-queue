@@ -78,6 +78,8 @@ var Pods_Jobs_Queue_Processor = {
 				status_text = pods_jobs_queue_config.status_complete_plural;
 			}
 
+			status_text += ' (' + Pods_Jobs_Queue_Processor.total + ' total)';
+
 			Pods_Jobs_Queue_Processor.progress_indicator.status.text( status_text );
 		}
 

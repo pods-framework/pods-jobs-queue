@@ -49,7 +49,7 @@ class Pods_Jobs_Queue_Admin {
 	/**
 	 * Register assets for Pods Jobs Queue
 	 */
-	public function register_assets() {
+	public static function register_assets() {
 
 		// Register JS script for Pods Jobs Queue processing
 		wp_register_script( 'pods-jobs-queue', plugins_url( 'js/pods-jobs-queue.js', __FILE__ ), array( 'jquery' ), PODS_JOBS_QUEUE_VERSION, true );
@@ -94,7 +94,7 @@ class Pods_Jobs_Queue_Admin {
 				'field_id' => 'id',
 				'field_index' => 'callback'
 			),
-			'orderby' => '( `t`.`status` = "queued" ) DESC, ( `t`.`status` = "completed" ) DESC, `t`.`date_queued` DESC, `t`.`date_completed` DESC',
+			'orderby' => '( `t`.`status` = "processing" ) DESC, ( `t`.`status` = "queued" ) DESC, ( `t`.`status` = "failed" ) DESC, ( `t`.`status` = "completed" ) DESC, `t`.`date_queued` DESC, `t`.`date_completed` DESC',
 			'fields' => array(
 				'manage' => array(
 					'callback' =>  array(
@@ -236,13 +236,21 @@ class Pods_Jobs_Queue_Admin {
 			unset( $ui[ 'actions_custom' ][ 'delete' ] );
 		}
 
+		// Run full queue
+		if ( 'process_jobs' == pods_v( 'action_bulk' ) && empty( $_GET[ 'action_bulk_ids' ] ) ) {
+			$max_jobs = apply_filters( 'pods_jobs_queue_max_full_process', -1 );
+
+			$ids = Pods_Jobs_Queue_API::get_queue( $max_jobs );
+
+			self::admin_page_process_jobs_ajax( $ids );
+		}
+
+		// Custom select
+		if ( 'manage' == pods_v( 'action', 'get', 'manage' ) ) {
+			$ui[ 'sql' ][ 'select' ] = '`t`.`' . implode( '`,`t`.`', array_keys( $ui[ 'fields' ][ 'manage' ] ) ) . '`';
+		}
+
 		pods_ui( $ui );
-
-	}
-
-	public static function admin_page_ui_status_date( ) {
-
-
 
 	}
 
@@ -370,7 +378,9 @@ class Pods_Jobs_Queue_Admin {
 			. '<div id="pods-jobs-queue-progress-label" style="position:absolute;left:45%%;top:6px;font-weight:bold;text-shadow:1px 1px 0 #FFF;font-size:12px;">%s</div>'
 			. '</div>';
 
-		$message = sprintf( $message, _n( 'Processing Job', 'Processing Jobs', count( $pods_jobs_queue ), 'pods-jobs-queue' ), __( 'Loading...', 'pods-jobs-queue' ) );
+		$total_jobs = count( $pods_jobs_queue );
+
+		$message = sprintf( $message, sprintf( _n( 'Processing %s Job', 'Processing %s Jobs', $total_jobs, 'pods-jobs-queue' ), number_format_i18n( $total_jobs ) ), __( 'Loading...', 'pods-jobs-queue' ) );
 
 		pods_message( $message );
 
@@ -385,6 +395,8 @@ class Pods_Jobs_Queue_Admin {
 
 		// Check if request is there
 		if ( ! empty( $_REQUEST[ 'pods_jobs_queue_job_id' ] ) && ! empty( $_REQUEST[ 'pods_jobs_queue_nonce' ] ) ) {
+			define( 'PODS_JOBS_DOING', true );
+
 			$job_id = (int) $_REQUEST[ 'pods_jobs_queue_job_id' ];
 
 			// Build nonce action from request
@@ -419,7 +431,13 @@ class Pods_Jobs_Queue_Admin {
 			die();
 		}
 
-		Pods_Jobs_Queue_API::run_queue();
+		define( 'PODS_JOBS_DOING', true );
+
+		$jobs = Pods_Jobs_Queue_API::run_queue();
+
+		$total_jobs = count( $jobs );
+
+		echo sprintf( 'Completed %d %s: %s', $total_jobs, _n( 'job', 'jobs', $total_jobs ), implode( ', ', $jobs ) );
 
 		// AJAX must die
 		die();
