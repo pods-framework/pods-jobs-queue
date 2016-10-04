@@ -1,0 +1,28 @@
+{
+	"name": "pods-framework/pods-jobs-queue",
+	"description": "Queue callbacks to be ran with arguments, unlike wp_cron which is scheduled jobs, these are queued and run concurrently as needed.",
+	"type": "wordpress-plugin",
+	"keywords": ["pods", "wordpress"],
+	"homepage": "https://github.com/pods-framework/pods-jobs-queue",
+	"require": {
+		"php": ">=5.3"
+	},
+	"license": "GPL-2.0",
+	"authors": [
+		{
+			"name": "Pods Framework Team",
+			"email": "contact@pods.io",
+			"homepage": "http://pods.io/"
+		},
+		{
+			"name" : "Scott Kingsley Clark",
+			"email" : "scott@pods.io",
+			"homepage" : "http://scottkclark.com/",
+			"role" : "Lead Developer"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/pods-framework/pods-jobs-queue/issues",
+		"source": "https://github.com/pods-framework/pods-jobs-queue"
+	}
+}
