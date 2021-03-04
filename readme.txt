@@ -29,9 +29,33 @@ $data = [
 	 * Don't pass things like [ $this, 'some_method' ], use a string like: 'SomeClass::some_method' instead.
 	 */
 	'callback'  => 'your_function',
-	'arguments' => '',
-	'blog_id'   => (int) ( function_exists( 'get_current_blog_id' ) ? get_current_blog_id() : 0 ),
-	'group'     => '',
+
+	/*
+	 * Whatever data you want to pass to the job to run. This is optional but you can set it to an array of data to pass through.
+	 *
+	 * If this is provided as an array, the job will be run using: call_user_func_array( $callback, $args ).
+	 *
+	 * If this is empty, the job will be run using: call_user_func( $callback ).
+	 *
+	 * It will be serialized if necessary.
+	 */
+	'arguments' => [
+		'argument1' => 'Some value',
+	],
+
+	/*
+	 * The blog ID the job should run on (for multisite support). This defaults to the current blog ID or 0.
+	 */
+	'blog_id'   => 1234,
+
+	/*
+	 * Specify a group for your job so you can categorize it if you've got lots of different jobs doing different segments of things.
+	 */
+	'group'     => 'my-job-group',
+
+	/*
+	 * Override the current status, this is will default to 'queued' so you never really have to set this.
+	 */
 	'status'    => 'queued',
 ];
 `
