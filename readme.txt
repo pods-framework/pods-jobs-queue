@@ -2,27 +2,39 @@
 Contributors: sc0ttkclark
 Donate link: http://pods.io/friends-of-pods/
 Tags: pods, queued jobs, cronjobs
-Requires at least: 3.9
-Tested up to: 4.6
+Requires at least: 4.9
+Tested up to: 5.7
 Stable tag: 1.1
+Requires PHP: 5.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Queue callbacks to be ran with arguments, unlike wp_cron which is scheduled jobs, these are queued and run concurrently as needed
+**Requires PHP 5.6+, WordPress 4.9+, and Pods Framework 2.7+**
 
-== Description ==
+Queue callbacks to be ran with arguments, unlike wp_cron which is scheduled jobs, these are queued and run concurrently as needed.
 
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+== Usage ==
 
-This plugin requires the [Pods Framework](http://wordpress.org/plugins/pods/) version 2.4.1 or later to run.
+You can queue jobs to be run by calling:
 
-= Why AJAX Views? =
+`pods_queue_job( $data );`
 
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Set your `$data` to an array of information that the job will use when it runs:
 
-= Usage =
-
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+`
+$data = [
+	/*
+	 * The function to callback when running the job.
+	 *
+	 * Don't pass things like [ $this, 'some_method' ], use a string like: 'SomeClass::some_method' instead.
+	 */
+	'callback'  => 'your_function',
+	'arguments' => '',
+	'blog_id'   => (int) ( function_exists( 'get_current_blog_id' ) ? get_current_blog_id() : 0 ),
+	'group'     => '',
+	'status'    => 'queued',
+];
+`
 
 == Installation ==
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class Pods_Jobs_Queue_API
  */
@@ -17,25 +18,21 @@ class Pods_Jobs_Queue_API {
 	 * @return string
 	 */
 	public static function table() {
-
 		/**
 		 * @var $wpdb wpdb
-		 */
-		global $wpdb;
+		 */ global $wpdb;
 
 		return $wpdb->prefix . self::TABLE;
-
 	}
 
 	/**
 	 * Install Pods Jobs Queue
 	 */
 	public static function install() {
-
 		$table = self::table();
 
 		// Table definitions
-		$tables = array();
+		$tables = [];
 
 		$tables[] = "
 			CREATE TABLE `{$table}` (
@@ -61,24 +58,20 @@ class Pods_Jobs_Queue_API {
 
 		// Update version in DB
 		update_option( 'pods_jobs_queue_version', PODS_JOBS_QUEUE_VERSION );
-
 	}
 
 	/**
 	 * Uninstall Pods Jobs Queue
 	 */
 	public static function uninstall() {
-
 		/**
 		 * @var $wpdb wpdb
-		 */
-		global $wpdb;
+		 */ global $wpdb;
 
 		$table = self::table();
 
 		// Delete table if it exists
 		$wpdb->query( "DROP TABLE IF EXISTS `{$table}`" );
-
 	}
 
 	/**
@@ -89,15 +82,13 @@ class Pods_Jobs_Queue_API {
 	 * @return object|null The next job as an object, or null if no job found
 	 */
 	public static function get_next_job( $status = 'queued' ) {
-
 		if ( ! Pods_Jobs_Queue::is_compatible() ) {
 			return null;
 		}
 
 		/**
 		 * @var $wpdb wpdb
-		 */
-		global $wpdb;
+		 */ global $wpdb;
 
 		$table = self::table();
 
@@ -112,13 +103,11 @@ class Pods_Jobs_Queue_API {
 
 		if ( ! empty( $item ) ) {
 			$item = (object) array_map( 'maybe_unserialize', $item );
-		}
-		else {
+		} else {
 			$item = null;
 		}
 
 		return $item;
-
 	}
 
 	/**
@@ -129,15 +118,13 @@ class Pods_Jobs_Queue_API {
 	 * @return object|null The job as an object, or null if job not found
 	 */
 	public static function get_job( $job_id ) {
-
 		if ( ! Pods_Jobs_Queue::is_compatible() ) {
 			return null;
 		}
 
 		/**
 		 * @var $wpdb wpdb
-		 */
-		global $wpdb;
+		 */ global $wpdb;
 
 		$table = self::table();
 
@@ -150,33 +137,29 @@ class Pods_Jobs_Queue_API {
 
 		if ( ! empty( $item ) ) {
 			$item = (object) array_map( 'maybe_unserialize', $item );
-		}
-		else {
+		} else {
 			$item = null;
 		}
 
 		return $item;
-
 	}
 
 	/**
 	 * Get the next jobs from the queue
 	 *
-	 * @param int $limit Number of jobs to limit batch to
+	 * @param int    $limit  Number of jobs to limit batch to
 	 * @param string $status Status to get job from
 	 *
 	 * @return array Job IDs that are in the queue
 	 */
 	public static function get_queue( $limit = 100, $status = 'queued' ) {
-
 		if ( ! Pods_Jobs_Queue::is_compatible() ) {
 			return null;
 		}
 
 		/**
 		 * @var $wpdb wpdb
-		 */
-		global $wpdb;
+		 */ global $wpdb;
 
 		$table = self::table();
 
@@ -197,7 +180,6 @@ class Pods_Jobs_Queue_API {
 		$ids = array_map( 'absint', $ids );
 
 		return $ids;
-
 	}
 
 	/**
@@ -208,30 +190,28 @@ class Pods_Jobs_Queue_API {
 	 * @return int|bool The new Job ID if it was added, otherwise false
 	 */
 	public static function queue_job( $data ) {
-
 		if ( ! Pods_Jobs_Queue::is_compatible() ) {
 			return false;
 		}
 
 		/**
 		 * @var $wpdb wpdb
-		 */
-		global $wpdb;
+		 */ global $wpdb;
 
 		$table = self::table();
 
-		$defaults = array(
-			'callback' => '',
+		$defaults = [
+			'callback'  => '',
 			'arguments' => '',
-			'blog_id' => (int) ( function_exists( 'get_current_blog_id' ) ? get_current_blog_id() : 0 ),
-			'group' => '',
-			'status' => 'queued'
-		);
+			'blog_id'   => (int) ( function_exists( 'get_current_blog_id' ) ? get_current_blog_id() : 0 ),
+			'group'     => '',
+			'status'    => 'queued',
+		];
 
 		$data = array_merge( $defaults, $data );
 
 		// Set date_queued to current datetime
-		$data[ 'date_queued' ] = current_time( 'mysql' );
+		$data['date_queued'] = current_time( 'mysql' );
 
 		$save_data = array_map( 'maybe_serialize', $data );
 
@@ -248,7 +228,6 @@ class Pods_Jobs_Queue_API {
 		}
 
 		return $job_id;
-
 	}
 
 	/**
@@ -257,7 +236,6 @@ class Pods_Jobs_Queue_API {
 	 * @return bool If job was started successfully
 	 */
 	public static function start_job( $job_id ) {
-
 		if ( ! Pods_Jobs_Queue::is_compatible() ) {
 			return false;
 		}
@@ -269,22 +247,16 @@ class Pods_Jobs_Queue_API {
 
 		$table = self::table();
 
-		$data = array(
+		$data = [
 			'date_started' => current_time( 'mysql' ),
-			'status' => 'processing'
-		);
+			'status'       => 'processing',
+		];
 
 		$data = apply_filters( 'pods_jobs_queue_start_job', $data, $job_id );
 
 		$save_data = array_map( 'maybe_serialize', $data );
 
-		$updated = $wpdb->update(
-			 $table,
-			 $save_data,
-			 array( 'id' => $job_id ),
-			 array_fill( 0, count( $data ), '%s' ),
-			 array( '%d' )
-		);
+		$updated = $wpdb->update( $table, $save_data, [ 'id' => $job_id ], array_fill( 0, count( $data ), '%s' ), [ '%d' ] );
 
 		$updated = ! empty( $updated );
 
@@ -293,44 +265,35 @@ class Pods_Jobs_Queue_API {
 		}
 
 		return $updated;
-
 	}
 
 	/**
-	 * @param $job_id
+	 * @param      $job_id
 	 * @param null $return
 	 *
 	 * @return bool If job was completed successfully
 	 */
 	public static function complete_job( $job_id, $return = null ) {
-
 		if ( ! Pods_Jobs_Queue::is_compatible() ) {
 			return false;
 		}
 
 		/**
 		 * @var $wpdb wpdb
-		 */
-		global $wpdb;
+		 */ global $wpdb;
 
 		$table = self::table();
 
-		$data = array(
+		$data = [
 			'date_completed' => current_time( 'mysql' ),
-			'status' => 'completed'
-		);
+			'status'         => 'completed',
+		];
 
 		$data = apply_filters( 'pods_jobs_queue_complete_job', $data, $job_id, $return );
 
 		$save_data = array_map( 'maybe_serialize', $data );
 
-		$updated = $wpdb->update(
-			 $table,
-			 $save_data,
-			 array( 'id' => $job_id ),
-			 array_fill( 0, count( $data ), '%s' ),
-			 array( '%d' )
-		);
+		$updated = $wpdb->update( $table, $save_data, [ 'id' => $job_id ], array_fill( 0, count( $data ), '%s' ), [ '%d' ] );
 
 		$updated = ! empty( $updated );
 
@@ -339,45 +302,36 @@ class Pods_Jobs_Queue_API {
 		}
 
 		return $updated;
-
 	}
 
 	/**
-	 * @param $job_id
+	 * @param        $job_id
 	 * @param string $log_message
 	 *
 	 * @return bool If job was stopped successfully
 	 */
 	public static function stop_job( $job_id, $log_message = '' ) {
-
 		if ( ! Pods_Jobs_Queue::is_compatible() ) {
 			return false;
 		}
 
 		/**
 		 * @var $wpdb wpdb
-		 */
-		global $wpdb;
+		 */ global $wpdb;
 
 		$table = self::table();
 
-		$data = array(
+		$data = [
 			'date_completed' => current_time( 'mysql' ),
-			'status' => 'failed',
-			'log' => $log_message
-		);
+			'status'         => 'failed',
+			'log'            => $log_message,
+		];
 
 		$data = apply_filters( 'pods_jobs_queue_stop_job', $data, $job_id, $log_message );
 
 		$save_data = array_map( 'maybe_serialize', $data );
 
-		$updated = $wpdb->update(
-			 $table,
-			 $save_data,
-			 array( 'id' => $job_id ),
-			 array_fill( 0, count( $data ), '%s' ),
-			 array( '%d' )
-		);
+		$updated = $wpdb->update( $table, $save_data, [ 'id' => $job_id ], array_fill( 0, count( $data ), '%s' ), [ '%d' ] );
 
 		$updated = ! empty( $updated );
 
@@ -386,7 +340,6 @@ class Pods_Jobs_Queue_API {
 		}
 
 		return $updated;
-
 	}
 
 	/**
@@ -395,23 +348,17 @@ class Pods_Jobs_Queue_API {
 	 * @return bool If job was deleted successfully
 	 */
 	public static function delete_job( $job_id ) {
-
 		if ( ! Pods_Jobs_Queue::is_compatible() ) {
 			return false;
 		}
 
 		/**
 		 * @var $wpdb wpdb
-		 */
-		global $wpdb;
+		 */ global $wpdb;
 
 		$table = self::table();
 
-		$deleted = $wpdb->delete(
-			 $table,
-			 array( 'id' => $job_id ),
-			 array( '%d' )
-		);
+		$deleted = $wpdb->delete( $table, [ 'id' => $job_id ], [ '%d' ] );
 
 		$deleted = ! empty( $deleted );
 
@@ -420,11 +367,9 @@ class Pods_Jobs_Queue_API {
 		}
 
 		return $deleted;
-
 	}
 
 	public static function run_job( $job_id ) {
-
 		$job = $job_id;
 
 		if ( ! is_object( $job ) ) {
@@ -440,8 +385,7 @@ class Pods_Jobs_Queue_API {
 
 					if ( ! empty( $job->arguments ) ) {
 						$return = call_user_func_array( $job->callback, $job->arguments );
-					}
-					else {
+					} else {
 						$return = call_user_func( $job->callback );
 					}
 
@@ -456,22 +400,18 @@ class Pods_Jobs_Queue_API {
 					self::complete_job( $job->id, $return );
 
 					return $job->id;
-				}
-				catch ( Exception $e ) {
+				} catch ( Exception $e ) {
 					self::stop_job( $job->id, $e->getMessage() );
 				}
-			}
-			else {
+			} else {
 				self::stop_job( $job->id, 'Callback not found' );
 			}
 		}
 
 		return false;
-
 	}
 
 	public static function run_queue() {
-
 		$count = 0;
 
 		$max_jobs = apply_filters( 'pods_jobs_queue_max_process', 25 );
@@ -479,10 +419,10 @@ class Pods_Jobs_Queue_API {
 
 		$start = time();
 
-		$queue = array();
+		$queue = [];
 
 		while ( $count < $max_jobs && ( $job = self::get_next_job() ) && ( time() - $start ) < $max_time ) {
-			$count++;
+			$count ++;
 
 			$job_id = self::run_job( $job );
 
@@ -492,7 +432,6 @@ class Pods_Jobs_Queue_API {
 		}
 
 		return $queue;
-
 	}
 
 }
